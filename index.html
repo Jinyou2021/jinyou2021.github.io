@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 极速文字传输站</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #212529; }
+        .container { max-width: 700px; margin: 0 auto; }
+        h2 { text-align: center; color: #495057; margin-bottom: 25px; font-size: 24px; }
+        .file-box { background: #ffffff; padding: 18px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+        .file-name { font-weight: bold; color: #007bff; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; background: #f1f3f5; padding: 12px; border-radius: 6px; font-size: 15px; margin: 0; line-height: 1.5; color: #343a40; border: 1px solid #dee2e6; }
+        #status { text-align: center; color: #6c757d; font-size: 14px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📋 我的文字传输站</h2>
+    <div id="content-container"></div>
+    <div id="status">正在同步最新的文本数据...</div>
+</div>
+
+<script>
+    async function loadGitHubTexts() {
+        const container = document.getElementById('content-container');
+        const statusDiv = document.getElementById('status');
+        let i = 1;
+        let hasFiles = false;
+
+        while (true) {
+            try {
+                const fileName = `t${i}.txt`;
+                // 关键点：使用增加时间戳的缓存刷新策略，确保你修改txt后，网页能立刻看到最新内容
+                const response = await fetch(`${fileName}?t=${new Date().getTime()}`);
+
+                // 如果遇到 404（文件不存在了），说明后面没有文件了，直接终止循环
+                if (!response.ok) {
+                    break;
+                }
+
+                const text = await response.text();
+                hasFiles = true;
+
+                // 动态创建并插入节点
+                const box = document.createElement('div');
+                box.className = 'file-box';
+                box.innerHTML = `<div class="file-name">📄 ${fileName}</div><pre>${text}</pre>`;
+                container.appendChild(box);
+
+                i++;
+            } catch (error) {
+                console.error("加载文件时发生错误:", error);
+                break;
+            }
+        }
+
+        if (hasFiles) {
+            statusDiv.textContent = `共成功加载了 ${i - 1} 个文本文件。`;
+        } else {
+            statusDiv.innerHTML = '<span style="color: #dc3545;">未检测到任何文本文件。请确保 t1.txt 与当前网页在 GitHub 同级目录下。</span>';
+        }
+    }
+
+    window.onload = loadGitHubTexts;
+</script>
+</body>
+</html>
